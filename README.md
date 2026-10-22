@@ -55,4 +55,47 @@ Health check: `http://localhost:8000/health`
 
 ## Live link
 
+
+
 Added in Week 2.
+
+# SpecTower
+
+SpecTower is a project I'm building to make it easier to find information in 3GPP LTE and 5G technical specifications.
+
+These documents can be long, and finding the exact clause related to a protocol question can take time. The idea is to let users ask questions in plain English and get answers based on the relevant specification, with references to the source clauses.
+
+## What I'm working on
+
+- Collecting official 3GPP specifications related to LTE and 5G.
+- Extracting text and keeping the clause numbers and document versions.
+- Finding relevant sections based on a user's question.
+- Generating answers with references to the original specifications.
+
+## Dataset
+
+I'm starting with **TS 38.331 — NR; Radio Resource Control (RRC); Protocol specification**.
+
+Source: [Official 3GPP specifications](https://www.3gpp.org/specifications)
+
+The initial document has been downloaded. Text extraction and search functionality are the next steps.
+
+## Planned technology
+
+- Python
+- FastAPI
+- Embeddings and a vector database
+- Retrieval-Augmented Generation (RAG)
+
+## Current progress
+
+- [x] Selected an initial 3GPP specification
+- [x] Downloaded the specification archive
+- [ ] Extract text from the document
+- [ ] Preserve clause numbers and version details
+- [ ] Implement semantic search
+- [ ] Generate answers with source references
+
+## Goal
+
+Build a tool that helps telecom engineers find relevant information in 3GPP specifications without having to search through long documents manually.
