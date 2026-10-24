@@ -12,3 +12,5 @@ data/raw/
 __pycache__/
 .env
 data/processed/
+data/sample/raw/
+url.txt
