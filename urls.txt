@@ -1,0 +1,4 @@
+
+https://www.3gpp.org/specifications
+https://www.3gpp.org/ftp/Specs/archive/23_series/23.501/
+https://www.3gpp.org/ftp/Specs/archive/38_series/38.331/
