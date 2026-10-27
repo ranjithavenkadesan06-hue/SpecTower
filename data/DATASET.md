@@ -40,3 +40,12 @@ unless the applicable 3GPP terms and permissions have been checked.
 - The collection is not yet a complete 5G/LTE standards corpus.
 - Document versions and releases should be preserved during ingestion and retrieval.
 '@ | Set-Content data/DATASET.md -Encoding utf8
+### Additional sample: TS 24.501
+
+- Specification: 3GPP TS 24.501 (version and release to be verified).
+- Series: 24 — signalling and protocols.
+- Files: 7 DOCX parts covering the cover, main body, annexes, and history.
+- Source archive: https://www.3gpp.org/ftp/Specs/archive/24_series/24.501/
+- Download date: unknown.
+- SHA256 checksums and file sizes: recorded in `manifest.csv`.
+- The seven parts must be ingested together as one logical specification, while retaining each source filename.
