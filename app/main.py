@@ -1,7 +1,6 @@
-
 import json
-from pathlib import Path
 from functools import lru_cache
+from pathlib import Path
 
 import chromadb
 from fastapi import Depends, FastAPI, HTTPException
@@ -171,10 +170,11 @@ def query_documents(request: QueryRequest):
     matches = []
 
     for document, metadata, distance in zip(
-        results["documents"][0],
-        results["metadatas"][0],
-        results["distances"][0]
-    ):
+    results["documents"][0],
+    results["metadatas"][0],
+    results["distances"][0],
+    strict=False
+   ):
 
         matches.append({
             "content": document,
