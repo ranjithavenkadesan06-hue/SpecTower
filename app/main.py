@@ -40,7 +40,7 @@ class QueryRequest(BaseModel):
 def health(settings: Settings = SettingsDep):
     return {
         "status": "ok",
-        "app": "SpecTower",
+        "app": settings.app_name,
         "environment": settings.environment
     }
 
