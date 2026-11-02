@@ -1,101 +1,199 @@
 # SpecTower
 
-## Problem
+**An AI-powered research assistant for 3GPP LTE and 5G technical specifications.**
 
-Telecom protocol test engineers spend hours searching thousands of pages of 3GPP specifications to find exact requirements for LTE and 5G protocols. Different teams work with different specification releases, making it difficult to find accurate, version-specific answers. SpecTower allows engineers to ask questions in plain English and receive answers backed by relevant specification clauses and citations. It aims to make telecom standards research faster, more reliable, and easier to verify.
+SpecTower helps telecom protocol engineers find relevant requirements in lengthy 3GPP specifications by asking questions in plain English. It uses Retrieval-Augmented Generation (RAG) to retrieve relevant specification clauses while preserving clause numbers, specification versions, and release information.
 
-## Who it is for
+## Problem Statement
+
+Telecom protocol test engineers often spend hours searching through thousands of pages of 3GPP technical specifications to identify exact protocol requirements.
+
+Finding the correct clause across different specification versions and releases can be time-consuming.
+
+SpecTower aims to simplify this process by enabling engineers to ask natural-language questions and retrieve relevant technical clauses with source references.
+
+## Who Is It For?
 
 - Telecom protocol test engineers working with LTE and 5G standards.
 - Telecom engineering teams supporting operator and chipset clients.
 
-## Signature feature
+## Key Features
 
-Clause-aware RAG with a research agent that retrieves relevant specification clauses, generates evidence-backed answers, and verifies claims against source documents.
+- **Document ingestion:** Process 3GPP technical specification documents.
+- **Clause-aware extraction:** Extract structured sections while preserving clause numbers.
+- **Metadata preservation:** Store specification numbers, versions, and releases.
+- **Semantic retrieval:** Retrieve relevant clauses using vector embeddings.
+- **Source traceability:** Return the original specification and clause information with retrieved content.
 
-## Hardest problem (my interview story)
+## Technology Stack
 
-The main challenge is processing thousands of pages of technical specifications reliably. SpecTower aims to use Redis-backed workers, checkpoints, and retry handling to resume interrupted ingestion without reprocessing completed files or creating duplicate chunks. Another challenge is preserving specification versions and clause numbers so that answers reference the correct technical requirements.
+| Component | Technology |
+|---|---|
+| Backend | Python, FastAPI |
+| Document processing | python-docx |
+| Vector database | ChromaDB |
+| Embeddings | ChromaDB embedding function |
+| API validation | Pydantic |
+| Code quality | Ruff, Pytest |
 
 ## Dataset
 
-| **Source** | **Link** | **Documents** | **Pages** | **Licence / terms** |
-| ---------- | -------- | ------------- | --------- | ------------------- |
-| 3GPP technical specifications (Series 23, 24, 36, and 38) | [Official 3GPP Specifications](https://www.3gpp.org/specifications) | Several hundred (target) | 25,000+ (target) | Check applicable 3GPP terms and notices |
+SpecTower uses official 3GPP technical specifications.
 
-## 10 real questions
+| Specification series | Focus |
+|---|---|
+| Series 23 | System architecture |
+| Series 24 | Signalling |
+| Series 36 | LTE radio |
+| Series 38 | 5G NR |
 
-See [docs/QUESTIONS.md](https://github.com/govindchandak/genai-starter-repo/blob/main/docs/QUESTIONS.md).
+**Current sample dataset:**
+- TS 23.501
+- TS 24.501
+- TS 38.331
+- Additional document parts from TS 24.501
 
-## Run it
+Official source: [3GPP Specifications](https://www.3gpp.org/specifications)
+
+The long-term dataset target is 25,000+ pages across several hundred specifications. This is a target, not the current indexed dataset.
+
+## RAG Pipeline
+
+```text
+3GPP Specification Documents
+          |
+          v
+     DOCX Extraction
+          |
+          v
+   Clause Identification
+          |
+          v
+   Metadata Preservation
+          |
+          v
+    Structured JSONL
+          |
+          v
+   Text Embeddings
+          |
+          v
+       ChromaDB
+          |
+          v
+    Semantic Retrieval
+          |
+          v
+   Relevant Clauses
+```
+
+## Current Progress
+
+- [x] Selected official 3GPP specifications.
+- [x] Downloaded sample specification documents.
+- [x] Implemented DOCX text extraction.
+- [x] Preserved clause numbers and specification metadata.
+- [x] Extracted 2,552 sections from 8 DOCX documents.
+- [x] Generated structured JSONL output.
+- [x] Integrated ChromaDB with FastAPI.
+- [x] Implemented batch-based indexing.
+- [x] Implemented a semantic retrieval API.
+- [ ] Complete and validate full dataset indexing.
+- [ ] Evaluate retrieval quality using real telecom questions.
+- [ ] Generate evidence-backed natural-language answers.
+- [ ] Add clause-level citations and answer verification.
+- [ ] Implement resumable ingestion with Redis workers and checkpoints.
+
+## Getting Started
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/ranjithavenkadesan06-hue/SpecTower.git
+cd SpecTower
+```
+
+### 2. Create a virtual environment
 
 ```bash
 python -m venv .venv
 ```
 
+### 3. Activate the environment
+
+Windows PowerShell:
+
 ```powershell
-# Windows PowerShell
-.\.venv\Scripts\Activate.ps1
+.venv\Scripts\Activate.ps1
 ```
+
+### 4. Install dependencies
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
 ```
 
+### 5. Configure environment variables
+
 ```powershell
-# Windows
 copy .env.example .env
 ```
+
+### 6. Start the FastAPI server
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-Health check: `http://localhost:8000/health`
+Open the interactive API documentation:
 
-## Live link
+http://127.0.0.1:8000/docs
 
+## API Endpoints
 
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/health` | Check application health |
+| POST | `/index` | Index extracted specification clauses |
+| POST | `/query` | Retrieve relevant specification clauses |
 
-Added in Week 2.
+### Example query
 
-# SpecTower
+```json
+{
+  "question": "What does the 5G system architecture define?",
+  "spec_number": "23.501"
+}
+```
 
-SpecTower is a project I'm building to make it easier to find information in 3GPP LTE and 5G technical specifications.
+The query endpoint returns relevant clauses with specification metadata and retrieval distances.
 
-These documents can be long, and finding the exact clause related to a protocol question can take time. The idea is to let users ask questions in plain English and get answers based on the relevant specification, with references to the source clauses.
+**Note:** The current implementation performs semantic retrieval. LLM-generated answers and final citation verification are planned improvements.
 
-## What I'm working on
+## Key Engineering Challenges
 
-- Collecting official 3GPP specifications related to LTE and 5G.
-- Extracting text and keeping the clause numbers and document versions.
-- Finding relevant sections based on a user's question.
-- Generating answers with references to the original specifications.
+### 1. Large-scale document ingestion
 
-## Dataset
+Processing thousands of pages requires reliable extraction and structured storage. Future improvements include resumable background workers, checkpoints, and retry handling.
 
-I'm starting with **TS 38.331 — NR; Radio Resource Control (RRC); Protocol specification**.
+### 2. Clause and version preservation
 
-Source: [Official 3GPP specifications](https://www.3gpp.org/specifications)
+Technical answers must refer to the correct specification and release. SpecTower preserves specification numbers, versions, releases, and clause identifiers as metadata.
 
-The initial document has been downloaded. Text extraction and search functionality are the next steps.
+### 3. Retrieval accuracy
 
-## Planned technology
+Relevant clauses must be retrieved even when engineers use natural language rather than exact technical terminology. Retrieval evaluation and improved chunking are planned.
 
-- Python
-- FastAPI
-- Embeddings and a vector database
-- Retrieval-Augmented Generation (RAG)
+## Future Improvements
 
-## Current progress
+- Redis-backed resumable ingestion workers.
+- Checkpointing and automatic retry handling.
+- Improved clause-aware chunking.
+- Advanced retrieval and reranking.
+- LLM-powered answer generation.
+- Evidence verification and clause citations.
+- Ingestion progress monitoring.
 
-- [x] Selected an initial 3GPP specification
-- [x] Downloaded the specification archive
-- [ ] Extract text from the document
-- [ ] Preserve clause numbers and version details
-- [ ] Implement semantic search
-- [ ] Generate answers with source references
+## Project Goal
 
-## Goal
-
-Build a tool that helps telecom engineers find relevant information in 3GPP specifications without having to search through long documents manually.
+Build a reliable AI research assistant that helps telecom engineers navigate complex LTE and 5G standards, retrieve exact technical requirements, and verify answers against original 3GPP specifications.
