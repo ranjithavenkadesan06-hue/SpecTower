@@ -1,192 +1,96 @@
 import json
-from functools import lru_cache
-from pathlib import Path
-
-import chromadb
-from fastapi import Depends, FastAPI, HTTPException
-from pydantic import BaseModel
+import time
+from collections.abc import AsyncIterator
+from typing import Annotated
+import psycopg
+from fastapi import Depends, FastAPI
+from fastapi.responses import JSONResponse,StreamingResponse
 
 from app.config import Settings, get_settings
+from app.cost import log_call
+from app.llm.errors import LLMConfigurationError, LLMUnavailable
+from app.llm.factory import create_provider
+from app.llm.reliable import AsyncReliableLLM
+from app.llm.types import LLMRequest, Message
+from app.schemas import ChatRequest
+from app.usage import usage_by_day
 
-app = FastAPI(title="SpecTower", version="1.0.0")
+app = FastAPI(title="Examate RAG starter", version="0.1.0")
 
-SettingsDep = Depends(get_settings)
-
-DATA_PATH = Path("data/processed/clauses.jsonl")
-DB_PATH = Path("data/chroma_db")
-
-
-@lru_cache
-def get_collection():
-    print("Connecting to ChromaDB...", flush=True)
-
-    client = chromadb.PersistentClient(path=str(DB_PATH))
-
-    collection = client.get_or_create_collection(
-        name="spectower_clauses",
-        metadata={"hnsw:space": "cosine"}
-    )
-
-    print("ChromaDB collection loaded", flush=True)
-    return collection
+SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
-class QueryRequest(BaseModel):
-    question: str
-    spec_number: str | None = None
+def get_llm(settings: SettingsDep) -> AsyncReliableLLM:
+    return create_provider(settings)
+
+
+LLMDep = Annotated[AsyncReliableLLM, Depends(get_llm)]
+
+
+@app.get("/hello")
+def say_hello():
+    return "hello"
+
+
+@app.get("/")
+def say_root():
+    return "You are on root page"
 
 
 @app.get("/health")
-def health(settings: Settings = SettingsDep):
-    return {
-        "status": "ok",
-        "app": settings.app_name,
-        "environment": settings.environment
-    }
+def health(settings: SettingsDep) -> dict:
+    """Liveness: the process is up. Must be fast and must not call the LLM or the DB."""
+    return {"status": "ok", "app": settings.app_name, "environment": settings.environment}
 
 
-@app.post("/index")
-def index_documents():
-    print("Starting document indexing...", flush=True)
-
-    if not DATA_PATH.exists():
-        raise HTTPException(
-            status_code=404,
-            detail="Clauses file not found"
-        )
-
-    collection = get_collection()
-
-    batch_size = 100
-    indexed = 0
-
-    ids = []
-    documents = []
-    metadatas = []
-
-    with DATA_PATH.open("r", encoding="utf-8") as file:
-
-        for i, line in enumerate(file):
-
-            record = json.loads(line)
-            content = record.get("content", "").strip()
-            if not content:
-                continue
-            content = content[:3000]
-            ids.append(f"clause_{i}")
-
-            documents.append(
-                f"TS {record['spec_number']} "
-                f"Clause {record['clause']}: "
-                f"{record['title']}\n{content}"
-            )
+def sse(data: dict, event: str | None = None) -> str:
+    prefix = f"event: {event}\n" if event else ""
+    return f"{prefix}data: {json.dumps(data)}\n\n"
 
 
-            metadatas.append({
-                "spec_number": record["spec_number"],
-                "version": record["version"],
-                "release": record["release"],
-                "clause": record["clause"],
-                "title": record["title"],
-                "source_file": record["source_file"]
-            })
-
-            if len(ids) == batch_size:
-
-                print(
-                    f"Starting batch of {len(ids)} clauses...",
-                    flush=True
-                )
-
-                collection.upsert(
-                    ids=ids,
-                    documents=documents,
-                    metadatas=metadatas
-                )
-
-                indexed += len(ids)
-
-                print(
-                    f"Successfully indexed {indexed} clauses",
-                    flush=True
-                )
-
-                ids, documents, metadatas = [], [], []
-
-    # Process remaining clauses
-    if ids:
-
-        print(
-            f"Starting final batch of {len(ids)} clauses...",
-            flush=True
-        )
-
-        collection.upsert(
-            ids=ids,
-            documents=documents,
-            metadatas=metadatas
-        )
-
-        indexed += len(ids)
-
-    print("Indexing completed!", flush=True)
-
-    return {
-        "message": "Indexing completed",
-        "indexed_clauses": indexed,
-        "total_in_database": collection.count()
-    }
-
-
-@app.post("/query")
-def query_documents(request: QueryRequest):
-
-    collection = get_collection()
-
-    total = collection.count()
-
-    if total == 0:
-        raise HTTPException(
-            status_code=400,
-            detail="No documents indexed. Call POST /index first."
-        )
-
-    filters = None
-
-    if request.spec_number:
-        filters = {"spec_number": request.spec_number}
-
-    results = collection.query(
-        query_texts=[request.question],
-        n_results=min(5, total),
-        where=filters,
-        include=[
-            "documents",
-            "metadatas",
-            "distances"
-        ]
+@app.post("/chat")
+async def chat(request: ChatRequest, settings: SettingsDep, provider: LLMDep) -> StreamingResponse:
+    llm_request = LLMRequest(
+        messages=tuple(Message(role=message.role, content=message.content) for message in request.messages),
+        model=request.model,
     )
 
-    matches = []
+    async def event_stream() -> AsyncIterator[str]:
+        usage = None
+        start = time.perf_counter()
+        ok = True
+        try:
+            async for chunk in provider.stream(llm_request):
+                if chunk.text:
+                    yield sse({"delta": chunk.text})
+                if chunk.usage is not None:
+                    usage = chunk.usage
+        except (LLMUnavailable, LLMConfigurationError) as error:
+            ok = False
+            yield sse({"error": str(error)}, event="error")
 
-    for document, metadata, distance in zip(
-    results["documents"][0],
-    results["metadatas"][0],
-    results["distances"][0],
-    strict=False
-   ):
+        latency_ms = (time.perf_counter() - start) * 1000
+        usage_data = usage or {"input_tokens": 0, "output_tokens": 0, "estimated": False}
+        record = log_call(
+            settings.cost_log_path,
+            provider=settings.llm_provider,
+            model=request.model or settings.llm_model,
+            usage=usage_data,
+            latency_ms=latency_ms,
+            price_in_per_m=settings.price_input_per_million,
+            price_out_per_m=settings.price_output_per_million,
+            ok=ok,
+            fallback_used=False,
+        )
 
-        matches.append({
-            "content": document,
-            "spec_number": metadata["spec_number"],
-            "version": metadata["version"],
-            "release": metadata["release"],
-            "clause": metadata["clause"],
-            "title": metadata["title"],
-            "distance": distance
-        })
+        if hasattr(usage_data, "__dict__"):
+            usage_data = usage_data.__dict__
+        yield sse({"usage": usage_data, "cost_usd": record["cost_usd"]}, event="done")
 
-    return {
-        "question": request.question,
-        "retrieved_clauses": matches
-    }
+    return StreamingResponse(event_stream(), media_type="text/event-stream")
+
+
+@app.get("/usage")
+def usage(settings: SettingsDep) -> dict:
+    """Calls, tokens and cost per day (UTC) from the cost log."""
+    return usage_by_day(settings.cost_log_path)

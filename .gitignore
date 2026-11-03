@@ -24,3 +24,12 @@ data/sample/raw/
 # Other
 .DS_Store
 
+.dockerignore
+docker-compose.yml
+
+# ChromaDB generated database
+data/chroma_db/
+
+# Python environments
+venv/
+.venv/
