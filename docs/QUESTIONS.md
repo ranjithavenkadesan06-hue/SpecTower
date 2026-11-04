@@ -28,4 +28,3 @@ For each question, evaluate:
 - Was the relevant clause retrieved?
 - Is the retrieved content relevant to the question?
 - Can the answer be verified against the original document?
-
