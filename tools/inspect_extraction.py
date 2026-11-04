@@ -1,21 +1,15 @@
-
 import json
 from collections import Counter
 from pathlib import Path
 
 path = Path("data/processed/clauses.jsonl")
 
-records = [
-    json.loads(line)
-    for line in path.read_text(encoding="utf-8").splitlines()
-]
+records = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
 
 print("TOTAL RECORDS:", len(records))
 
 print("\nRECORD COUNTS BY FILE")
-counts = Counter(
-    Path(r["source_file"]).name for r in records
-)
+counts = Counter(Path(r["source_file"]).name for r in records)
 
 for filename, count in counts.items():
     print(f"{filename}: {count}")

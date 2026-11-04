@@ -1,4 +1,3 @@
-
 import json
 import re
 from pathlib import Path
@@ -22,7 +21,6 @@ VERSION_PATTERN = re.compile(r"\bV(\d+\.\d+\.\d+)\b")
 RELEASE_PATTERN = re.compile(r"\bRelease\s+(\d+)\b", re.IGNORECASE)
 
 
-
 def get_metadata(file_path, document):
     match = SPEC_PATTERN.search(file_path.name)
 
@@ -42,10 +40,7 @@ def get_metadata(file_path, document):
 
     version = version_match.group(1) if version_match else None
 
-    spec_number = (
-        f"{match.group(1)}.{match.group(2)}"
-        if match else None
-    )
+    spec_number = f"{match.group(1)}.{match.group(2)}" if match else None
 
     # Fallback for split 24.501 documents.
     if version is None and spec_number == "24.501":
@@ -60,15 +55,11 @@ def get_metadata(file_path, document):
     }
 
 
-
 def get_table_text(table):
     rows = []
 
     for row in table.rows:
-        cells = [
-            cell.text.strip().replace("\n", " ")
-            for cell in row.cells
-        ]
+        cells = [cell.text.strip().replace("\n", " ") for cell in row.cells]
 
         if any(cells):
             rows.append(" | ".join(cells))
@@ -96,17 +87,18 @@ def extract_document(file_path):
         if not text:
             return
 
-        sections.append({
-            **metadata,
-            "source_file": str(file_path),
-            "clause": current_clause,
-            "title": current_title,
-            "parent_heading": current_parent,
-            "content": text,
-        })
+        sections.append(
+            {
+                **metadata,
+                "source_file": str(file_path),
+                "clause": current_clause,
+                "title": current_title,
+                "parent_heading": current_parent,
+                "content": text,
+            }
+        )
 
     for block in document.iter_inner_content():
-
         if isinstance(block, Table):
             text = get_table_text(block)
             if text:
@@ -147,10 +139,7 @@ def extract_document(file_path):
 def main():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    files = sorted(
-        path for path in INPUT_DIR.rglob("*.docx")
-        if "_0_cover" not in path.name.lower()
-    )
+    files = sorted(path for path in INPUT_DIR.rglob("*.docx") if "_0_cover" not in path.name.lower())
 
     total_sections = 0
 
@@ -160,16 +149,11 @@ def main():
                 sections = extract_document(file_path)
 
                 for section in sections:
-                    output.write(
-                        json.dumps(section, ensure_ascii=False) + "\n"
-                    )
+                    output.write(json.dumps(section, ensure_ascii=False) + "\n")
 
                 total_sections += len(sections)
 
-                print(
-                    f"Processed: {file_path.name} "
-                    f"-> {len(sections)} sections"
-                )
+                print(f"Processed: {file_path.name} -> {len(sections)} sections")
 
             except Exception as error:
                 print(f"Failed: {file_path.name}: {error}")

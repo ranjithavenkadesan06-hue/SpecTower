@@ -1,4 +1,3 @@
-
 from collections import Counter
 from pathlib import Path
 
@@ -9,11 +8,7 @@ INPUT_DIR = Path("data/sample/raw")
 for file_path in sorted(INPUT_DIR.rglob("*.docx")):
     document = Document(file_path)
 
-    styles = Counter(
-        paragraph.style.name
-        for paragraph in document.paragraphs
-        if paragraph.text.strip()
-    )
+    styles = Counter(paragraph.style.name for paragraph in document.paragraphs if paragraph.text.strip())
 
     print(f"\n--- {file_path.name} ---")
 
