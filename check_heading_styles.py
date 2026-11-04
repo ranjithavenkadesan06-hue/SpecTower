@@ -1,6 +1,7 @@
 
 from collections import Counter
 from pathlib import Path
+
 from docx import Document
 
 INPUT_DIR = Path("data/sample/raw")

@@ -1,35 +1,44 @@
-
-# Python virtual environments
-venv/
+.env
 .venv/
-
-# Python cache and test files
 __pycache__/
-*.py[cod]
+*.pyc
+.pytest_cache/
+.ruff_cache/
+logs/
+data/raw/
+*.sqlite
+.DS_Store
+venv# Environment
+.env
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Testing and linting
 .pytest_cache/
 .ruff_cache/
 
-# Environment variables and logs
-.env
+# Logs
 logs/
+*.log
 
-# Local databases
-*.sqlite
-
-# Raw and processed datasets
+# Generated data
 data/raw/
 data/processed/
-data/sample/raw/
-
-# Other
-.DS_Store
-
-.dockerignore
-docker-compose.yml
-
-# ChromaDB generated database
 data/chroma_db/
 
-# Python environments
-venv/
-.venv/
+# SQLite databases
+*.sqlite
+*.sqlite3
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
