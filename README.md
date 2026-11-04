@@ -1,6 +1,6 @@
 [![CI](https://github.com/ranjithavenkadesan06-hue/SpecTower/actions/workflows/ci.yml/badge.svg)](https://github.com/ranjithavenkadesan06-hue/SpecTower/actions/workflows/ci.yml)
 
-**Live:** https://spectower.onrender.com/health· first request after 15 idle minutes takes about a minute (free tier)
+**Live:** https://spectower.onrender.com/health first request after 15 idle minutes takes about a minute (free tier)
 # SpecTower
 
 **An AI-powered research assistant for 3GPP LTE and 5G technical specifications.**
