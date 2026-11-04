@@ -28,6 +28,4 @@ Commit after every class. Tag every Friday: `git tag week-N && git push origin w
 ## Daily log
 | Date | What I did today | Commit |
 |---|---|---|
-| 03 Nov 2026 | Streaming /chat, safe retries, fallback model, cost log, GET /usage | 5564ace |
-| 03 Nov 2026 | Docker Compose (API + pgvector), /ready route, .dockerignore | pending |
-| 04 Nov 2026 | CI workflow (test + docker-smoke), pre-commit hooks, deployed to Render, live link in README | pending |
+| 04 Nov 2026 | Fixed CI errors, corrected end-of-file formatting and encoding issues; latest GitHub checks passing (2/2) — Commit: `ef153fe`, `b182e32`, `01919d0` | completed
