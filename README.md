@@ -1,3 +1,6 @@
+[![CI](https://github.com/ranjithavenkadesan06-hue/SpecTower/actions/workflows/ci.yml/badge.svg)](https://github.com/ranjithavenkadesan06-hue/SpecTower/actions/workflows/ci.yml)
+
+**Live:** https://spectower.onrender.com/health· first request after 15 idle minutes takes about a minute (free tier)
 # SpecTower
 
 **An AI-powered research assistant for 3GPP LTE and 5G technical specifications.**
@@ -197,3 +200,21 @@ Relevant clauses must be retrieved even when engineers use natural language rath
 ## Project Goal
 
 Build a reliable AI research assistant that helps telecom engineers navigate complex LTE and 5G standards, retrieve exact technical requirements, and verify answers against original 3GPP specifications.
+
+## Run it
+bash
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements-dev.txt
+cp .env.example .env                                 # Windows: copy .env.example .env
+uvicorn app.main:app --reload
+curl localhost:8000/health
+
+
+## Live link
+https://spectower.onrender.com
+
+## Run with Docker
+bash
+cp .env.example .env
+docker compose up --build
+curl localhost:8000/ready
