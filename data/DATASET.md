@@ -1,4 +1,3 @@
-@'
 # SpecTower Dataset
 
 ## Purpose
@@ -43,7 +42,7 @@ unless the applicable 3GPP terms and permissions have been checked.
 ### Additional sample: TS 24.501
 
 - Specification: 3GPP TS 24.501 (version and release to be verified).
-- Series: 24 — signalling and protocols.
+- Series: 24 ï¿½ signalling and protocols.
 - Files: 7 DOCX parts covering the cover, main body, annexes, and history.
 - Source archive: https://www.3gpp.org/ftp/Specs/archive/24_series/24.501/
 - Download date: unknown.
